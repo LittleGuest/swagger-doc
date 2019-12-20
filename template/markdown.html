@@ -1,0 +1,35 @@
+## {{.Summary}}
+**接口地址** {{.Path}}
+
+**请求方式** {{.Method}}
+
+**consumes** {{.Consumes}}
+
+**produces** {{.Produces}}
+
+**接口描述** {{.Description}}
+
+**请求参数**
+|参数名称|参数说明|请求类型|是否必须|数据类型|schema|
+|-|-|-|-|-|-|
+{{range $k,$v := .Parameter}}| {{$v.Name}} | {{$v.Description}} | {{$v.In}} | {{$v.Required}} |  |  |
+{{end}}
+
+**响应状态**
+| 状态码 | 说明 | schema |
+| - | - | - |
+{{range $k,$v := .Response}}| {{$k}} | {{$v.Description}} |  |
+{{end}}
+
+**响应参数**
+| 参数名称 | 参数说明 | 类型 | schema |
+| - | - | - | - |
+
+**响应示例**
+```json
+{
+"code": 0,
+"data": {},
+"msg": ""
+}
+```

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv=X-UA-Compatible content="IE=edge,chrome=1">
+    <meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>SwaggerAPI文档</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <style>
+        textarea {
+            height: 150px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <el-container>
+        <el-main>
+            <el-form v-loading="loading">
+                <el-select v-model="apiUrl" placeholder="请选择api" style="width: 30%">
+                    <el-option
+                            v-for="item in apiUrls"
+                            :key="item.value"
+                            :label="item.label"
+                            :value="item.value">
+                    </el-option>
+                </el-select>
+                <el-button @click="getApiJson">发送</el-button>
+                <el-input v-model="apiJson" type="textarea"></el-input>
+                <el-button @click="toFile('excel')">Excel</el-button>
+                <el-button @click="toFile('html')">Html</el-button>
+                <el-button @click="toFile('md')">Markdown</el-button>
+                <el-button @click="toFile('pdf')">Pdf</el-button>
+                <el-button @click="toFile('word')">Word</el-button>
+            </el-form>
+        </el-main>
+    </el-container>
+</div>
+</body>
+<script src="https://unpkg.com/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+<script>
+    var app = new Vue({
+        el: "#app",
+        data() {
+            return {
+                apiUrls: [
+                    {
+                        value: 'https://petstore.swagger.io/v2/swagger.json',
+                        label: 'https://petstore.swagger.io/v2/swagger.json'
+                    }, {
+                        value: 'http://localhost:9999/v2/api-docs',
+                        label: 'http://localhost:9999/v2/api-docs'
+                    }
+                ],
+                apiUrl: '',
+                basePath: 'api/v1',
+                loading: false,
+                apiJson: ''
+            }
+        },
+        mounted() {
+        },
+        computed: {},
+        watch: {},
+        methods: {
+            getApiJson() {
+                this.loading = true
+                axios.get(this.basePath + "/api", {
+                    params: {
+                        url: this.apiUrl
+                    }
+                }).then(resp => {
+                    console.log(resp)
+                    this.apiJson = JSON.stringify(resp.data)
+
+                    this.loading = false
+                }).catch(resp => {
+                    this.loading = false
+                    this.$notify.error({
+                        title: '错误',
+                        message: resp,
+                        duration: 2000
+                    });
+                })
+            },
+            toFile(type) {
+                window.location.href = this.basePath + "/to-file?type=" + type + "&url=" + this.apiUrl
+            }
+        }
+    });
+</script>
+</html>
