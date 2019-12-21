@@ -147,6 +147,7 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 	var resp []byte
 	switch fileType {
 	case "md":
+		fileName = FILE_NAME + "." + FILE_SUFFIX_MARKDOWN
 		swaggerApi, err := AnalysisApiJson(url)
 		if err != nil {
 			logger.Println(err)
@@ -154,10 +155,10 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ToMarkdown(swaggerApi)
-		resp, _ = ioutil.ReadFile("api-test.zip")
-		removeFile("api-test.zip")
-		fileName = "api.zip"
+		resp, _ = ioutil.ReadFile(fileName)
+		removeFile(fileName)
 	case "pdf":
+		fileName = FILE_NAME + "." + FILE_SUFFIX_PDF
 		swaggerApi, err := AnalysisApiJson(url)
 		if err != nil {
 			logger.Println(err)
@@ -165,10 +166,10 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ToPdf(swaggerApi)
-		resp, _ = ioutil.ReadFile("hello.pdf")
-		removeFile("hello.pdf")
-		fileName = "hello.pdf"
+		resp, _ = ioutil.ReadFile(fileName)
+		removeFile(fileName)
 	case "word":
+		fileName = FILE_NAME + "." + FILE_SUFFIX_WORD
 		swaggerApi, err := AnalysisApiJson(url)
 		if err != nil {
 			logger.Println(err)
@@ -176,9 +177,8 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		ToWord(swaggerApi)
-		resp, _ = ioutil.ReadFile("api-test.docx")
-		removeFile("api-test.docx")
-		fileName = "api.docx"
+		resp, _ = ioutil.ReadFile(fileName)
+		removeFile(fileName)
 	default:
 		_, _ = w.Write([]byte("暂时不支持该文件类型"))
 	}
@@ -189,7 +189,7 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 
 // 转markdown, 一个接口一个文档，打包压缩下载
 func ToMarkdown(swaggerApi SwaggerApi) {
-	zipFile, err := os.Create("api-test.zip")
+	zipFile, err := os.Create(FILE_NAME + "." + FILE_SUFFIX_MARKDOWN)
 	defer zipFile.Close()
 	if err != nil {
 		logger.Printf("创建压缩文件失败：%v", err)
@@ -230,7 +230,7 @@ func ToPdf(swaggerApi SwaggerApi) {
 	pdf.AddPage()
 	pdf.SetFont("Arial", "B", 16)
 	pdf.Write(10, swaggerApi.String())
-	_ = pdf.OutputFileAndClose("hello.pdf")
+	_ = pdf.OutputFileAndClose(FILE_NAME + "." + FILE_SUFFIX_PDF)
 }
 
 // 转word
@@ -395,7 +395,7 @@ func ToWord(swaggerApi SwaggerApi) {
 		logger.Fatalf("word文档验证失败：%v", err)
 	}
 
-	if err := doc.SaveToFile("api-test.docx"); err != nil {
+	if err := doc.SaveToFile(FILE_NAME + "." + FILE_SUFFIX_WORD); err != nil {
 		logger.Fatalln(err)
 	}
 }
