@@ -4,14 +4,13 @@ import (
 	"archive/zip"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/LittleGuest/tool"
 	"github.com/gorilla/mux"
+	"github.com/jung-kurt/gofpdf"
 	"github.com/unidoc/unioffice/color"
 	"github.com/unidoc/unioffice/document"
 	"github.com/unidoc/unioffice/measurement"
 	"github.com/unidoc/unioffice/schema/soo/wml"
-	"github.com/unidoc/unioffice/spreadsheet"
 	"html/template"
 	"io/ioutil"
 	"log"
@@ -147,18 +146,6 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 	var fileName string
 	var resp []byte
 	switch fileType {
-	case "excel":
-		swaggerApi, err := AnalysisApiJson(url)
-		if err != nil {
-			logger.Println(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		ToExcel(swaggerApi)
-		resp, _ = ioutil.ReadFile("api-test.xlsx")
-		removeFile("api-test.xlsx")
-		fileName = "api.xlsx"
-	case "html":
 	case "md":
 		swaggerApi, err := AnalysisApiJson(url)
 		if err != nil {
@@ -171,6 +158,16 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 		removeFile("api-test.zip")
 		fileName = "api.zip"
 	case "pdf":
+		swaggerApi, err := AnalysisApiJson(url)
+		if err != nil {
+			logger.Println(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		ToPdf(swaggerApi)
+		resp, _ = ioutil.ReadFile("hello.pdf")
+		removeFile("hello.pdf")
+		fileName = "hello.pdf"
 	case "word":
 		swaggerApi, err := AnalysisApiJson(url)
 		if err != nil {
@@ -180,9 +177,7 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 		}
 		ToWord(swaggerApi)
 		resp, _ = ioutil.ReadFile("api-test.docx")
-		go func() {
-			removeFile("api-test.docx")
-		}()
+		removeFile("api-test.docx")
 		fileName = "api.docx"
 	default:
 		_, _ = w.Write([]byte("暂时不支持该文件类型"))
@@ -191,27 +186,6 @@ func CreateFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", "attachment;filename="+fileName)
 	_, _ = w.Write(resp)
 }
-
-// TODO 转excel
-func ToExcel(swaggerApi SwaggerApi) {
-	wb := spreadsheet.New()
-	sheet := wb.AddSheet()
-	for r := 0; r < 5; r++ {
-		row := sheet.AddRow()
-		for c := 0; c < 5; c++ {
-			cell := row.AddCell()
-			cell.SetString(fmt.Sprintf("row %d cell %d", r, c))
-		}
-	}
-	if err := wb.Validate(); err != nil {
-		logger.Fatalf("error validating sheet: %s", err)
-	}
-	if err := wb.SaveToFile("api-test.xlsx"); err != nil {
-		logger.Fatalf("excel文件创建失败：%v", err)
-	}
-}
-
-// TODO 转html
 
 // 转markdown, 一个接口一个文档，打包压缩下载
 func ToMarkdown(swaggerApi SwaggerApi) {
@@ -250,7 +224,14 @@ func ToMarkdown(swaggerApi SwaggerApi) {
 	}
 }
 
-// TODO 转pdf
+// 转pdf
+func ToPdf(swaggerApi SwaggerApi) {
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	pdf.AddPage()
+	pdf.SetFont("Arial", "B", 16)
+	pdf.Write(10, swaggerApi.String())
+	_ = pdf.OutputFileAndClose("hello.pdf")
+}
 
 // 转word
 func ToWord(swaggerApi SwaggerApi) {
